@@ -23,7 +23,7 @@ export default (options: LdapSetupSettings) => {
       return;
     }
 
-    const { path } = config;
+    const { path, errorMessage } = config;
 
     passport.use(new WindowsStrategy(config, async (profile: any, done: Function) => {
       done(null, profile);
@@ -31,14 +31,6 @@ export default (options: LdapSetupSettings) => {
 
     app.post(path, async (req, res, next) => {
       passport.authenticate('WindowsAuthentication', async (err, ldapResponse, info) => {
-        if (err) {
-          return next(err);
-        }
-  
-        if(!ldapResponse) {
-          return next(new NotAuthenticated('Invalid credentials'));
-        }
-  
         const service = app.defaultAuthentication(authService);
         const [ strategy ] = service.getStrategies('ldap') as LdapStrategy[];
         const params = {
@@ -62,21 +54,29 @@ export default (options: LdapSetupSettings) => {
         };
 
         try {
-            const authentication = {
-              strategy: strategy.name,
-              ...ldapResponse
-            };
+          if (err) {
+            throw err;
+          }
+    
+          if(!ldapResponse) {
+            throw new NotAuthenticated(errorMessage);
+          }
+          
+          const authentication = {
+            strategy: strategy.name,
+            ...ldapResponse
+          };
 
-            debug(`Calling ${authService}.create authentication with LDAP strategy`);
+          debug(`Calling ${authService}.create authentication with LDAP strategy`);
 
-            const authResult = await service.create(authentication, params);
+          const authResult = await service.create(authentication, params);
 
-            debug('Successful LDAP authentication, sending response');
+          debug('Successful LDAP authentication, sending response');
 
-            await sendResponse(authResult);
+          await sendResponse(authResult);
         } catch (error) {
-            debug('Received LDAP authentication error', error.stack);
-            await sendResponse(error);
+          debug('Received LDAP authentication error', error.stack);
+          await sendResponse(error);
         }
       })(req, res, next);
     });
