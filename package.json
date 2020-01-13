@@ -1,6 +1,6 @@
 {
   "name": "feathers-windowsauth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Active Directory/LDAP authentication for Feathers using passport-windowsauth.",
   "main": "lib/",
   "types": "lib/",
