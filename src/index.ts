@@ -25,6 +25,7 @@ export const setup = (options: LdapSetupSettings) => (app: Application) => {
   debug(`Setting app global windowsauth object`);
   app.set('windowsauth', {
     ...windowsauth,
+    errorMessage: windowsauth.errorMessage ? windowsauth.errorMessage : 'Invalid credentials',
     path: windowsauth.path ? windowsauth.path : '/ldap'
   });
 };
